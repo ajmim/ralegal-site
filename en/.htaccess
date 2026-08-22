@@ -1,0 +1,110 @@
+# ============================================================
+# RALegal — Sécurité de niveau production (Apache / Infomaniak)
+# ============================================================
+
+# ---- 1. En-têtes de sécurité HTTP ----
+<IfModule mod_headers.c>
+
+    # Protection contre le clickjacking (interdit l'affichage dans une iframe)
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # Protection contre le MIME-type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # XSS filtering (legacy, la plupart des navigateurs l'ignorent désormais en faveur du CSP)
+    Header always set X-XSS-Protection "1; mode=block"
+
+    # HSTS — force HTTPS (inclut les sous-domaines, valable 6 mois)
+    Header always set Strict-Transport-Security "max-age=15768000; includeSubDomains"
+
+    # Referrer Policy — ne jamais transmettre l'URL complète
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Permissions Policy — désactive les APIs sensibles
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+
+    # Supprimer les en-têtes qui révèlent la version du serveur
+    Header unset X-Powered-By
+    Header unset Server
+
+    # Compression
+    Header set Vary "Accept-Encoding"
+
+</IfModule>
+
+# ---- 2. Content Security Policy (CSP) ----
+# Bloque tout ce qui n'est pas explicitement autorisé
+<IfModule mod_headers.c>
+    Header always set Content-Security-Policy "\
+        default-src 'none'; \
+        script-src 'self'; \
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
+        font-src 'self' https://fonts.gstatic.com; \
+        img-src 'self' data: https:; \
+        connect-src 'self' https://formspree.io; \
+        frame-ancestors 'self'; \
+        base-uri 'self'; \
+        form-action 'self' https://formspree.io"
+</IfModule>
+
+# ---- 3. Protection des fichiers sensibles ----
+<FilesMatch "^\.(htaccess|htpasswd|git|gitignore|env)$">
+    Require all denied
+</FilesMatch>
+
+# Bloquer l'accès au dossier .git (fuite de code source / credentials)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^\.git - [F,L]
+    RewriteRule ^(.*/)?\.git - [F,L]
+</IfModule>
+
+# Bloquer l'accès aux fichiers de sauvegarde / archives
+<FilesMatch "\.(bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist|tar|gz|zip)$">
+    Require all denied
+</FilesMatch>
+
+# Bloquer l'exécution de scripts dans les dossiers d'images
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+# ---- 4. Protection des scripts PHP (s'il en reste un) ----
+<FilesMatch "\.(php|phar|phtml)$">
+    Require all denied
+</FilesMatch>
+
+# ---- 5. Mise en cache des ressources statiques ----
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/webp "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+# ---- 6. Compression ----
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# ---- 7. Anti hotlinking (éviter que d'autres sites ne volent tes images) ----
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTP_REFERER} !^$
+    RewriteCond %{HTTP_REFERER} !^https?://(www\.)?ralegal\.ch [NC]
+    RewriteCond %{HTTP_REFERER} !^https?://localhost [NC]
+    RewriteRule \.(jpg|jpeg|png|gif|webp)$ - [F,NC]
+</IfModule>
+
+# ---- 8. Désactiver le listing des répertoires ----
+Options -Indexes
+
+# ---- 9. Désactiver le suivi des liens symboliques ----
+Options -FollowSymLinks
+
+# ---- 10. Charset par défaut ----
+AddDefaultCharset UTF-8

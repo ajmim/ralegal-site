@@ -1,0 +1,11 @@
+# RALegal — robots.txt
+# Autorise les moteurs de recherche à indexer le site
+User-agent: *
+Allow: /
+
+# Désactiver l'indexation de fichiers sensibles
+Disallow: /img/
+Disallow: /.git/
+Disallow: /*.php
+
+Sitemap: https://ralegal.ch/sitemap.xml

@@ -1,0 +1,5 @@
+Contact: mailto:rajmi@ralegal.ch
+Encryption: https://ralegal.ch
+Preferred-Languages: fr, en, ar
+Canonical: https://ralegal.ch/
+Policy: https://ralegal.ch/politique-de-confidentialite
