@@ -59,6 +59,10 @@
 <FilesMatch "^\.(htaccess|htpasswd|git|gitignore|env)$">
     Require all denied
 </FilesMatch>
+# Bloquer l'accès direct à la config SMTP (contient un mot de passe)
+<FilesMatch "^smtp_config(\.sample)?\.php$">
+    Require all denied
+</FilesMatch>
 
 # Bloquer l'accès au dossier .git (fuite de code source / credentials)
 <IfModule mod_rewrite.c>
@@ -73,14 +77,17 @@
 </FilesMatch>
 
 # Bloquer l'exécution de scripts dans les dossiers d'images
+# (le handler contact.php, à la racine, reste autorisé — voir section 4)
 <IfModule mod_php.c>
-    php_flag engine off
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+        php_flag engine off
+    </FilesMatch>
 </IfModule>
 
-# ---- 4. Protection des scripts PHP (s'il en reste un) ----
-<FilesMatch "\.(php|phar|phtml)$">
-    Require all denied
-</FilesMatch>
+# ---- 4. Scripts PHP ----
+# Le site est statique ; le seul fichier PHP est contact.php (le formulaire).
+# Infomaniak gère l'exécution PHP au niveau du panneau. On ne bloque donc
+# volontairement AUCUN fichier PHP ici pour ne pas casser le formulaire.
 
 # ---- 5. Mise en cache des ressources statiques ----
 <IfModule mod_expires.c>

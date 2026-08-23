@@ -12,36 +12,32 @@ window.addEventListener('scroll', () => {
 toggle.addEventListener('click', () => links.classList.toggle('open'));
 links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
 
-// Formulaire de contact — simulation d'envoi (à connecter à Formspree / backend)
+// Formulaire de contact — envoi vers le handler PHP auto-hébergé (contact.php)
 const form = document.getElementById('contactForm');
 const success = document.getElementById('formSuccess');
 
 if (form) {
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    const action = form.getAttribute('action') || '';
+    const action = form.getAttribute('action') || '/contact.php';
 
-    // Envoi réel via Formspree (remplacer YOUR_FORM_ID dans l'attribut action)
-    if (action && !action.includes('yourformid')) {
-      fetch(action, {
-        method: 'POST',
-        body: new FormData(form),
-        headers: { 'Accept': 'application/json' }
-      })
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(() => {
+    fetch(action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data) => {
+        if (data && data.ok) {
           success.classList.add('show');
           form.reset();
           setTimeout(() => success.classList.remove('show'), 6000);
-        })
-        .catch(() => {
+        } else {
           alert('Une erreur est survenue. Veuillez nous contacter directement par téléphone.');
-        });
-    } else {
-      // Démo sans backend
-      success.classList.add('show');
-      form.reset();
-      setTimeout(() => success.classList.remove('show'), 6000);
-    }
+        }
+      })
+      .catch(() => {
+        alert('Une erreur est survenue. Veuillez nous contacter directement par téléphone.');
+      });
   });
 }

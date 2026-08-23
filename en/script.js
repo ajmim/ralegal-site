@@ -1,6 +1,6 @@
-// RALegal — script principal (fichier externe pour CSP strict)
+// RALegal — main script (external file for strict CSP)
 
-// Navigation fixe
+// Fixed navigation
 const nav = document.getElementById('nav');
 const toggle = document.getElementById('navToggle');
 const links = document.getElementById('navLinks');
@@ -12,36 +12,32 @@ window.addEventListener('scroll', () => {
 toggle.addEventListener('click', () => links.classList.toggle('open'));
 links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
 
-// Formulaire de contact — simulation d'envoi (à connecter à Formspree / backend)
+// Contact form — posts to the self-hosted PHP handler (contact.php)
 const form = document.getElementById('contactForm');
 const success = document.getElementById('formSuccess');
 
 if (form) {
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    const action = form.getAttribute('action') || '';
+    const action = form.getAttribute('action') || '/contact.php';
 
-    // Envoi réel via Formspree (remplacer YOUR_FORM_ID dans l'attribut action)
-    if (action && !action.includes('yourformid')) {
-      fetch(action, {
-        method: 'POST',
-        body: new FormData(form),
-        headers: { 'Accept': 'application/json' }
-      })
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(() => {
+    fetch(action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data) => {
+        if (data && data.ok) {
           success.classList.add('show');
           form.reset();
           setTimeout(() => success.classList.remove('show'), 6000);
-        })
-        .catch(() => {
-          alert('Une erreur est survenue. Veuillez nous contacter directement par téléphone.');
-        });
-    } else {
-      // Démo sans backend
-      success.classList.add('show');
-      form.reset();
-      setTimeout(() => success.classList.remove('show'), 6000);
-    }
+        } else {
+          alert('An error occurred. Please contact us directly by phone.');
+        }
+      })
+      .catch(() => {
+        alert('An error occurred. Please contact us directly by phone.');
+      });
   });
 }
