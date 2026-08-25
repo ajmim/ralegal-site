@@ -16,3 +16,6 @@ Thumbs.db
 *.pem
 *.key
 smtp_config.php
+
+# Runtime anti-spam cache (created by contact.php)
+.contact-cache/

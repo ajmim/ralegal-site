@@ -17,6 +17,10 @@ const form = document.getElementById('contactForm');
 const success = document.getElementById('formSuccess');
 
 if (form) {
+  // Stamp page-load time into the hidden time-trap field (used by the PHP spam filter)
+  const timeField = form.querySelector('input[name="form_time"]');
+  if (timeField) timeField.value = (Date.now() / 1000).toFixed(3);
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     const action = form.getAttribute('action') || '/contact.php';
